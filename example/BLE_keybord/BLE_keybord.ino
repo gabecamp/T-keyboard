@@ -39,12 +39,19 @@ unsigned long previousMillis_1 = 0; //Millisecond time record
 unsigned long previousMillis_2 = 0; //Millisecond time record
 const long backlight_off_time = 20000;       //Turn off the screen backlight
 const long display_Wait_blue_time = 2000;       //The screen shows waiting for bluetooth connection
+const long repeat_delay = 400;       //Hold time before an arrow key starts repeating
+const long repeat_rate = 50;         //Time between repeated arrow keys
+uint8_t repeat_key = 0;              //Arrow key currently held, 0 if none
+int repeat_col = 0;
+int repeat_row = 0;
+unsigned long repeat_next_ms = 0;
 
 void readMatrix();
 bool keyPressed(int colIndex, int rowIndex);
 bool keyActive(int colIndex, int rowIndex);
 bool isPrintableKey(int colIndex, int rowIndex);
 uint8_t altNavKey(int colIndex, int rowIndex);
+void repeatNavKey();
 void printMatrix();
 void set_keyborad_BL(bool state);
 void clear_sccreen();
@@ -170,7 +177,7 @@ void setup()
     }
 
         TFT_099.DispColor(0, 0, TFT_WIDTH, TFT_HEIGHT, BLACK);
-    TFT_099.DispStr("version 1.2.0", 0, 2, WHITE, BLACK);
+    TFT_099.DispStr("version 1.3.0", 0, 2, WHITE, BLACK);
     delay(3000);
 
     TFT_099.DispColor(0, 0, TFT_WIDTH, TFT_HEIGHT, BLACK);
@@ -206,6 +213,7 @@ void loop()
 
         readMatrix();
         printMatrix();
+        repeatNavKey();
 
         // key 3,3 is the enter key
         if (keyPressed(3, 3)) {
@@ -329,6 +337,23 @@ uint8_t altNavKey(int colIndex, int rowIndex)
     }
 }
 
+// Resend the held arrow key while alt and the key stay down
+void repeatNavKey()
+{
+    if (!repeat_key) {
+        return;
+    }
+    if (!keyActive(0, 4) || !keyActive(repeat_col, repeat_row)) {
+        repeat_key = 0;
+        return;
+    }
+    if ((long)(millis() - repeat_next_ms) >= 0) {
+        bleKeyboard.write(repeat_key);
+        repeat_next_ms = millis() + repeat_rate;
+        previousMillis_1 = millis();
+    }
+}
+
 
 void printMatrix()
 {
@@ -343,6 +368,13 @@ void printMatrix()
                     uint8_t navKey = altNavKey(colIndex, rowIndex);
                     if (navKey) {
                         bleKeyboard.write(navKey);
+                        if (navKey != KEY_ESC && navKey != KEY_TAB) {
+                            // arrow keys repeat while held
+                            repeat_key = navKey;
+                            repeat_col = colIndex;
+                            repeat_row = rowIndex;
+                            repeat_next_ms = millis() + repeat_delay;
+                        }
                         TFT_099.backlight(50);
                         previousMillis_1 = millis();
                         continue;
