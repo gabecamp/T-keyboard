@@ -44,6 +44,7 @@ void readMatrix();
 bool keyPressed(int colIndex, int rowIndex);
 bool keyActive(int colIndex, int rowIndex);
 bool isPrintableKey(int colIndex, int rowIndex);
+uint8_t altNavKey(int colIndex, int rowIndex);
 void printMatrix();
 void set_keyborad_BL(bool state);
 void clear_sccreen();
@@ -314,6 +315,19 @@ bool isPrintableKey(int colIndex, int rowIndex)
     return keyboard_symbol[colIndex][rowIndex] != NULL || keyboard[colIndex][rowIndex] != NULL;
 }
 
+// Key code sent when the given key is pressed while alt is held, or 0 if none
+uint8_t altNavKey(int colIndex, int rowIndex)
+{
+    switch (keyboard[colIndex][rowIndex]) {
+    case 'w': return KEY_UP_ARROW;
+    case 'a': return KEY_LEFT_ARROW;
+    case 's': return KEY_DOWN_ARROW;
+    case 'd': return KEY_RIGHT_ARROW;
+    case ' ': return KEY_TAB;
+    default:  return 0;
+    }
+}
+
 
 void printMatrix()
 {
@@ -322,6 +336,17 @@ void printMatrix()
         for (int colIndex = 0; colIndex < colCount; colIndex++) {
             // we only want to print if the key is pressed and it is a printable character
             if (keyPressed(colIndex, rowIndex) && isPrintableKey(colIndex, rowIndex)) {
+
+                // alt+w/a/s/d send arrow keys, alt+space sends tab
+                if (keyActive(0, 4)) {
+                    uint8_t navKey = altNavKey(colIndex, rowIndex);
+                    if (navKey) {
+                        bleKeyboard.write(navKey);
+                        TFT_099.backlight(50);
+                        previousMillis_1 = millis();
+                        continue;
+                    }
+                }
 
                 String toPrint;
                 if (symbolSelected) {
