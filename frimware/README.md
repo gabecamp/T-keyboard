@@ -6,3 +6,4 @@
 
 
 - `T-keyboard_1.1.0_factory.bin`: adds alt+W/A/S/D = arrow keys, alt+space = tab. Flash at address `0x0`, SPI mode DIO, 80MHz, 32Mbit.
+- `T-keyboard_1.2.0_factory.bin`: adds alt+Q = esc on top of 1.1.0. Same flash settings.

@@ -170,7 +170,7 @@ void setup()
     }
 
         TFT_099.DispColor(0, 0, TFT_WIDTH, TFT_HEIGHT, BLACK);
-    TFT_099.DispStr("version 1.1.0", 0, 2, WHITE, BLACK);
+    TFT_099.DispStr("version 1.2.0", 0, 2, WHITE, BLACK);
     delay(3000);
 
     TFT_099.DispColor(0, 0, TFT_WIDTH, TFT_HEIGHT, BLACK);
@@ -319,6 +319,7 @@ bool isPrintableKey(int colIndex, int rowIndex)
 uint8_t altNavKey(int colIndex, int rowIndex)
 {
     switch (keyboard[colIndex][rowIndex]) {
+    case 'q': return KEY_ESC;
     case 'w': return KEY_UP_ARROW;
     case 'a': return KEY_LEFT_ARROW;
     case 's': return KEY_DOWN_ARROW;
@@ -337,7 +338,7 @@ void printMatrix()
             // we only want to print if the key is pressed and it is a printable character
             if (keyPressed(colIndex, rowIndex) && isPrintableKey(colIndex, rowIndex)) {
 
-                // alt+w/a/s/d send arrow keys, alt+space sends tab
+                // alt+w/a/s/d send arrow keys, alt+q sends esc, alt+space sends tab
                 if (keyActive(0, 4)) {
                     uint8_t navKey = altNavKey(colIndex, rowIndex);
                     if (navKey) {
